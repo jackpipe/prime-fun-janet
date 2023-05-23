@@ -200,7 +200,7 @@
 (defn main [& args]
   ```
   usage:
-  prime u|s number-of-primes
+  prime-fun-janet u|s number-of-primes
   ```
   (print (svg-header))
   (let [type (args 1)
