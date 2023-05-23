@@ -6,6 +6,6 @@ We started with a few 'is prime?' functions using iteration and then a more func
 
 Then we made a new implementation of a primes generator, using the sieve of eratosthenes algorithm, but using a table to record primes as we hit them, rather than the usual method of marking 'future' composites in a big array.
 
-Finally there is a function to generate a Sacks spiral and one for an Ulam spiral, and some SVG utility functions to generate them as SVG.
+Finally there is a function to generate a Sacks spiral and one for an Ulam spiral, and some SVG utility functions to render them as SVG.
 
 A nice little exercise in coding and an introduction to Janet and 'lisp'-like languiages for my kids. And me actually, to some extent.
