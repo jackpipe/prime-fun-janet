@@ -15,7 +15,7 @@
 
 
 (defn svg-ulam-point [x y p scale]
-  (string/format `<rect x="%f" y="%f" width="%d" height="%d" stroke="black" stroke-width="0.1" fill="#aaa" transform="rotate(45, %f, %f)" num="%d"/>`
+  (string/format `<rect x="%d" y="%d" width="%.2f" height="%.2f" stroke="black" stroke-width="0.1" fill="#aaa" transform="rotate(45, %f, %f)" num="%d"/>`
     (- (* x scale) (/ scale 2))
     (- (* y scale) (/ scale 2))
     (* 1.2 scale)
@@ -23,6 +23,7 @@
     (* x scale)
     (* y scale)
     p))
+
 
 
 (defn is-prime [n]
@@ -72,37 +73,71 @@
   )))
 
 
-  (defn primes-sieve []
-    "
-    Prime numbers generator using sieve of Eratosthenes
 
-    Count upwards, building a 'sieve' of discovered primes, and discarding numbers that are
-    composites of primes already in the sieve.
-    Each entry in the sieve is a key pointing to a list of primes, where the key is
-    the 'next upcoming composite (multiple)' divisible by it's primes, eg { 45 @[3 5] }
+(defn primes-sieve-list []
+  "
+  Prime numbers generator using sieve of Eratosthenes
 
-    For each number, check if it's one of the composites recorded in the sieve.
-    If it is, update the sieve with recalculated 'upcoming composite' entries for each prime
-    and delete the current entry.
-    If not, it must be a new prime; yield the number, and add an entry for it in the sieve.
-    "
-    (fiber/new (fn []
-      (yield 2) # the only even prime, yield it explicitly.
+  Count upwards, building a 'sieve' of discovered primes, and discarding numbers that are
+  composites of primes already in the sieve.
+  Each entry in the sieve is a key pointing to a list of primes, where the key is
+  the 'next upcoming composite (multiple)' divisible by it's primes, eg { 45 @[3 5] }
 
-      (let [sieve (table/new (math/pow 2 12))]
-        (loop [n :range [3 nil 2]]  # only odd numbers
-          (if-let [current-composite (sieve n)]
-            (do 
-              (each prime-factor current-composite
-                (let [next-composite-key (+ n (* 2 prime-factor))] # add 2*prime-factor, else composite would be even
-                  (if-let [next-composite (sieve next-composite-key)]
-                    (array/push next-composite prime-factor)
-                    (put sieve next-composite-key @[prime-factor]))))
-              (put sieve n nil))
-            (do
-              (yield n)
-              (put sieve (* n n) @[n])) # next composite is n^2. Anything less is composite a smaller prime, already in the sieve
-            ))))))
+  For each number, check if it's one of the composites recorded in the sieve.
+  If it is, update the sieve with recalculated 'upcoming composite' entries for each prime
+  and delete the current entry.
+  If not, it must be a new prime; yield the number, and add an entry for it in the sieve.
+  "
+  (fiber/new (fn []
+    (yield 2) # the only even prime, yield it explicitly.
+
+    (let [sieve (table/new (math/pow 2 12))]
+      (loop [n :range [3 nil 2]]  # only odd numbers
+        (if-let [current-composite (sieve n)]
+          (do 
+            (each prime-factor current-composite
+              (let [next-composite-key (+ n (* 2 prime-factor))] # add 2*prime-factor, else composite would be even
+                (if-let [next-composite (sieve next-composite-key)]
+                  (array/push next-composite prime-factor)
+                  (put sieve next-composite-key @[prime-factor]))))
+            (put sieve n nil))
+          (do
+            (yield n)
+            (put sieve (* n n) @[n])) # next composite is n^2. Anything less is composite a smaller prime, already in the sieve
+          ))))))
+
+
+(defn primes-sieve []
+  "
+  Prime numbers generator using sieve of Eratosthenes
+
+  Count upwards, building a 'sieve' of discovered primes, and discarding numbers that are
+  composites of primes already in the sieve.
+  Each entry in the sieve is a composite-number key with a prime-factor value.
+
+  For each number, check if it's one of the composites recorded in the sieve.
+  If it is, find the next 'empty' composite for it's prime, add a sieve entry for it,
+  and delete the current entry.
+  If not, it must be a new prime; yield the number, and add an entry for it in the sieve.
+  "
+  (fiber/new (fn []
+    (yield 2) # the only even prime, yield it explicitly.
+
+    (let [sieve (table/new (math/pow 2 12))]
+      (loop [n :range [3 nil 2]]  # only odd numbers
+        (if-let [prime-factor (sieve n)]
+          (do
+            # Find the next composite/multiple of this prime that isn't in the sieve
+            (var- next-composite n)
+            (loop [_ :iterate (set next-composite (+ next-composite (* 2 prime-factor))) # add 2*prime-factor, else composite would be even
+                     :until (not (sieve next-composite)) ])
+            (put sieve next-composite prime-factor)
+            (put sieve n nil))
+          (do
+            (put sieve (* n n) n) # next composite is n^2. Anything less is composite a smaller prime, already in the sieve
+            (yield n))
+          ))))))
+
 
 
 (defn square-spiral []
@@ -151,7 +186,6 @@
           (set next-prime (resume prime))))))))
 
 
-
 (defn sacks []
   "
   Generate Sacks spiral.
@@ -175,25 +209,32 @@
         ))))))
 
 
-(defn polar-to-xy [scale turn-fraction radius]
+
+(defn polar-to-xy [turn-fraction radius]
     "
     convert polar (fraction-of-revolution radius) to cartesian (x y)
     "
     (let [angle (- (* turn-fraction 2 math/pi) (/ math/pi 2))]  # convert turns to radians, with 0 rad pointing north
-      [(* scale radius (math/cos angle)) (* scale radius (math/sin angle))] ))
+      [(* radius (math/cos angle)) (* radius (math/sin angle))] ))
 
 
 (defn svg-ulam [count scale]
   (var- n 0)
-  (loop [u :in (ulam) :while (< n count) :before (++ n)]
-    (print (svg-ulam-point (splice u) n scale)))
-  )
+  (loop [u :in (ulam)
+         :while (< n count)
+         :before (++ n)]
+    (print (svg-ulam-point (splice u) n scale))))
 
 
 (defn svg-sacks [count scale]
+  "
+  Print <count> svg points of a sacks spiral
+  "
   (var- n 0)
-  (loop [u :in (sacks) :while (< n count) :before (++ n)]
-    (print (svg-sacks-point (splice (polar-to-xy scale (splice u))) n))))
+  (loop [ (turn-fraction radius) :in (sacks)
+         :while (< n count)
+         :before (++ n) ]
+    (print (svg-sacks-point (splice (polar-to-xy turn-fraction (* scale radius))) n))))
 
 
 
@@ -209,6 +250,5 @@
       (do
         (svg-ulam count 4))
       (svg-sacks count 2)))
-  (print (svg-footer))
-)
+  (print (svg-footer)))
 
