@@ -9,3 +9,8 @@ Then we made a new implementation of a primes generator, using the sieve of erat
 Finally there is a function to generate a Sacks spiral and one for an Ulam spiral, and some SVG utility functions to render them as SVG.
 
 A nice little exercise in coding and an introduction to Janet and 'lisp'-like languiages for my kids. And me actually, to some extent.
+
+
+![Sacks Spiral](https://github.com/[jackpipe]/[prime-fun-janet]/blob/[main]/s.svg?raw=true)
+
+![Ulam Spiral](https://github.com/[jackpipe]/[prime-fun-janet]/blob/[main]/u.svg?raw=true)
