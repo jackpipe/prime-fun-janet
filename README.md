@@ -11,6 +11,6 @@ Finally there is a function to generate a Sacks spiral and one for an Ulam spira
 A nice little exercise in coding and an introduction to Janet and 'lisp'-like languiages for my kids. And me actually, to some extent.
 
 
-![Sacks Spiral](https://github.com/jackpipe]/prime-fun-janet/blob/main/s.svg?raw=true)
+![Sacks Spiral](https://github.com/jackpipe/prime-fun-janet/blob/main/s.svg?raw=true)
 
 ![Ulam Spiral](https://github.com/jackpipe/prime-fun-janet/blob/main/u.svg?raw=true)
